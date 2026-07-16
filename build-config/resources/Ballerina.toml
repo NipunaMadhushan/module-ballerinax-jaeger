@@ -19,7 +19,7 @@ org = "ballerinax"
 name = "jaeger"
 version = "@toml.version@"
 keywords = ["Type/Driver", "Area/Developer Tools", "Vendor/Jaeger", "Observability", "tracing"]
-distribution = "2201.11.0"
+distribution = "2201.13.0"
 
 [platform.java21]
 graalvmCompatible = true
@@ -49,21 +49,21 @@ artifactId = "opentelemetry-semconv"
 version = "@opentelemetrySemconv.version@"
 
 [[platform.java21.dependency]]
-path = "./lib/opentelemetry-proto-@opentelemetryProto.version@.jar"
+path = "./lib/opentelemetry-exporter-otlp-@opentelemetryExporter.version@.jar"
 groupId = "io.opentelemetry"
-artifactId = "opentelemetry-proto"
-version = "@opentelemetryProto.version@"
-
-[[platform.java21.dependency]]
-path = "./lib/opentelemetry-exporter-otlp-trace-@opentelemetryExporter.version@.jar"
-groupId = "io.opentelemetry"
-artifactId = "opentelemetry-exporter-otlp-trace"
+artifactId = "opentelemetry-exporter-otlp"
 version = "@opentelemetryExporter.version@"
 
 [[platform.java21.dependency]]
 path = "./lib/opentelemetry-exporter-otlp-common-@opentelemetryExporter.version@.jar"
 groupId = "io.opentelemetry"
 artifactId = "opentelemetry-exporter-otlp-common"
+version = "@opentelemetryExporter.version@"
+
+[[platform.java21.dependency]]
+path = "./lib/opentelemetry-exporter-sender-grpc-managed-channel-@opentelemetryExporter.version@.jar"
+groupId = "io.opentelemetry"
+artifactId = "opentelemetry-exporter-sender-grpc-managed-channel"
 version = "@opentelemetryExporter.version@"
 
 [[platform.java21.dependency]]
@@ -91,12 +91,6 @@ artifactId = "grpc-api"
 version = "@grpc.version@"
 
 [[platform.java21.dependency]]
-path = "./lib/grpc-context-@grpc.version@.jar"
-groupId = "io.grpc"
-artifactId = "grpc-context"
-version = "@grpc.version@"
-
-[[platform.java21.dependency]]
 path = "./lib/grpc-core-@grpc.version@.jar"
 groupId = "io.grpc"
 artifactId = "grpc-core"
@@ -109,15 +103,9 @@ artifactId = "grpc-stub"
 version = "@grpc.version@"
 
 [[platform.java21.dependency]]
-path = "./lib/grpc-protobuf-@grpc.version@.jar"
+path = "./lib/grpc-util-@grpc.version@.jar"
 groupId = "io.grpc"
-artifactId = "grpc-protobuf"
-version = "@grpc.version@"
-
-[[platform.java21.dependency]]
-path = "./lib/grpc-protobuf-lite-@grpc.version@.jar"
-groupId = "io.grpc"
-artifactId = "grpc-protobuf-lite"
+artifactId = "grpc-util"
 version = "@grpc.version@"
 
 [[platform.java21.dependency]]
@@ -125,18 +113,6 @@ path = "./lib/grpc-netty-shaded-@grpc.version@.jar"
 groupId = "io.grpc"
 artifactId = "grpc-netty-shaded"
 version = "@grpc.version@"
-
-[[platform.java21.dependency]]
-path = "./lib/protobuf-java-@protobuf.version@.jar"
-groupId = "com.google.protobuf"
-artifactId = "protobuf-java"
-version = "@protobuf.version@"
-
-[[platform.java21.dependency]]
-path = "./lib/netty-handler-@netty.version@.jar"
-groupId = "io.netty"
-artifactId = "netty-handler"
-version = "@netty.version@"
 
 [[platform.java21.dependency]]
 path = "./lib/perfmark-api-@perfmark.version@.jar"

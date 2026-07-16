@@ -27,9 +27,11 @@ dependencies {
     implementation "io.opentelemetry:opentelemetry-sdk-trace:${openTelemetrySDKVersion}"
     implementation "io.opentelemetry:opentelemetry-sdk-common:${openTelemetrySDKVersion}"
     implementation "io.opentelemetry.semconv:opentelemetry-semconv:${openTelemetrySemconvVersion}"
-    implementation "io.opentelemetry:opentelemetry-exporter-otlp-trace:${openTelemetryExporterVersion}"
+    implementation("io.opentelemetry:opentelemetry-exporter-otlp:${openTelemetryExporterVersion}") {
+        exclude group: 'io.opentelemetry', module: 'opentelemetry-exporter-sender-okhttp'
+    }
+    implementation "io.opentelemetry:opentelemetry-exporter-sender-grpc-managed-channel:${openTelemetryExporterVersion}"
     implementation "io.opentelemetry:opentelemetry-extension-trace-propagators:${openTelemetryVersion}"
-    implementation "io.opentelemetry:opentelemetry-sdk-extension-jaeger-remote-sampler:${openTelemetrySDKVersion}"
 
     implementation("com.google.guava:guava:${guavaVersion}") {
         exclude group: 'com.google.code.findbugs', module: 'jsr305'
@@ -47,11 +49,7 @@ dependencies {
         exclude group: 'io.grpc', module: 'grpc-context'
         exclude group: 'com.google.code.findbugs', module: 'jsr305'
     }
-    implementation("io.grpc:grpc-protobuf:${grpcVersion}") {
-        exclude group: 'io.grpc', module: 'grpc-context'
-        exclude group: 'com.google.code.findbugs', module: 'jsr305'
-    }
-    implementation("io.grpc:grpc-protobuf-lite:${grpcVersion}") {
+    implementation("io.grpc:grpc-util:${grpcVersion}") {
         exclude group: 'io.grpc', module: 'grpc-context'
         exclude group: 'com.google.code.findbugs', module: 'jsr305'
     }
@@ -59,13 +57,10 @@ dependencies {
         exclude group: 'io.grpc', module: 'grpc-context'
         exclude group: 'com.google.code.findbugs', module: 'jsr305'
     }
-    implementation "com.google.protobuf:protobuf-java:${protobufVersion}"
-    implementation("io.netty:netty-handler:${nettyVersion}")
     implementation "io.perfmark:perfmark-api:${perfmarkVersion}"
 
     testImplementation "org.testng:testng:${testngVersion}"
     testImplementation "org.mockito:mockito-core:${mockitoVersion}"
-    testImplementation "io.opentelemetry:opentelemetry-sdk-testing:${openTelemetrySDKVersion}"
 }
 
 compileJava {
