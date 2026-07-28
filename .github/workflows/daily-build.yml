@@ -61,6 +61,14 @@ jobs:
         uses: codecov/codecov-action@v4
         with:
           files: ballerina-tests/jaeger-server-tests/target/report/jaeger_server_tests/coverage-report.xml
+      - name: Run Trivy vulnerability scanner
+        uses: aquasecurity/trivy-action@master
+        with:
+          scan-type: 'fs'
+          scan-ref: "${{ github.workspace }}/ballerina/lib"
+          format: 'table'
+          timeout: '6m0s'
+          exit-code: '1'
       - name: Notify failure
         if: ${{ failure() }}
         run: |
