@@ -17,19 +17,41 @@
 plugins {
     id 'java-library'
     id 'jacoco'
+    id 'com.gradleup.shadow'
 }
 
 description = 'Ballerina - Jaeger Extension - Native Module'
 
+// opentelemetry-semconv pulls in opentelemetry-bom, whose version constraints otherwise bump
+// opentelemetry-exporter-otlp-common/opentelemetry-api/opentelemetry-context past the versions
+// declared below (silently pairing otlp-trace:1.14.0 with an incompatible otlp-common:1.29.0,
+// for example). Force every OpenTelemetry artifact to the exact version this module intends.
+configurations.all {
+    resolutionStrategy {
+        force "io.opentelemetry:opentelemetry-api:${openTelemetryVersion}"
+        force "io.opentelemetry:opentelemetry-context:${openTelemetryVersion}"
+        force "io.opentelemetry:opentelemetry-sdk-trace:${openTelemetrySDKVersion}"
+        force "io.opentelemetry:opentelemetry-sdk-common:${openTelemetrySDKVersion}"
+        force "io.opentelemetry.semconv:opentelemetry-semconv:${openTelemetrySemconvVersion}"
+        force "io.opentelemetry:opentelemetry-proto:${openTelemetryProtoVersion}"
+        force "io.opentelemetry:opentelemetry-exporter-otlp-trace:${openTelemetryExporterVersion}"
+        force "io.opentelemetry:opentelemetry-exporter-otlp-common:${openTelemetryExporterVersion}"
+        force "io.opentelemetry:opentelemetry-extension-trace-propagators:${openTelemetryPropagatorsVersion}"
+    }
+}
+
 dependencies {
-    implementation "org.ballerinalang:ballerina-runtime:${ballerinaLangVersion}"
-    implementation "io.opentelemetry:opentelemetry-context:${openTelemetryVersion}"
+    compileOnly "org.ballerinalang:ballerina-runtime:${ballerinaLangVersion}"
+    compileOnly "io.opentelemetry:opentelemetry-context:${openTelemetryVersion}"
     implementation "io.opentelemetry:opentelemetry-sdk-trace:${openTelemetrySDKVersion}"
     implementation "io.opentelemetry:opentelemetry-sdk-common:${openTelemetrySDKVersion}"
     implementation "io.opentelemetry.semconv:opentelemetry-semconv:${openTelemetrySemconvVersion}"
+    implementation "io.opentelemetry:opentelemetry-proto:${openTelemetryProtoVersion}"
     implementation "io.opentelemetry:opentelemetry-exporter-otlp-trace:${openTelemetryExporterVersion}"
-    implementation "io.opentelemetry:opentelemetry-extension-trace-propagators:${openTelemetryVersion}"
-    implementation "io.opentelemetry:opentelemetry-sdk-extension-jaeger-remote-sampler:${openTelemetrySDKVersion}"
+    implementation "io.opentelemetry:opentelemetry-exporter-otlp-common:${openTelemetryExporterVersion}"
+    // Only this dependency is bumped past the version embedded in ballerina-rt.jar - see the note
+    // above openTelemetryPropagatorsVersion in gradle.properties.
+    implementation "io.opentelemetry:opentelemetry-extension-trace-propagators:${openTelemetryPropagatorsVersion}"
 
     implementation("com.google.guava:guava:${guavaVersion}") {
         exclude group: 'com.google.code.findbugs', module: 'jsr305'
@@ -63,6 +85,8 @@ dependencies {
     implementation("io.netty:netty-handler:${nettyVersion}")
     implementation "io.perfmark:perfmark-api:${perfmarkVersion}"
 
+    testImplementation "org.ballerinalang:ballerina-runtime:${ballerinaLangVersion}"
+    testImplementation "io.opentelemetry:opentelemetry-context:${openTelemetryVersion}"
     testImplementation "org.testng:testng:${testngVersion}"
     testImplementation "org.mockito:mockito-core:${mockitoVersion}"
     testImplementation "io.opentelemetry:opentelemetry-sdk-testing:${openTelemetrySDKVersion}"
@@ -114,13 +138,52 @@ jar {
     }
 }
 
+// Relocates jaeger's OpenTelemetry SDK/exporter/grpc/protobuf/netty/guava dependencies into a
+// jaeger-private package namespace, so their versions can never collide with whatever OTel jars
+// other Ballerina modules (e.g. ballerina/observe) bundle on a given distribution - confirmed
+// necessary empirically: without shading, ballerina/observe's bundled opentelemetry-sdk-common
+// 1.0.0 collides with this module's 1.32.0 copy, and the runtime can end up loading the wrong one
+// (NoClassDefFoundError on classes like ThrottlingLogger that only exist in the newer jar).
+// opentelemetry-api/opentelemetry-context are deliberately left unshaded and excluded: they are
+// embedded directly inside ballerina-rt.jar, and the TracerProvider SPI contract requires the
+// exact same (runtime-provided) Tracer/ContextPropagators classes to cross that boundary.
+shadowJar {
+    archiveClassifier.set('all')
+    configurations = [project.configurations.runtimeClasspath]
+
+    dependencies {
+        exclude(dependency('io.opentelemetry:opentelemetry-api'))
+        exclude(dependency('io.opentelemetry:opentelemetry-context'))
+    }
+
+    relocate 'io.opentelemetry.sdk', 'io.ballerina.observe.trace.jaeger.shaded.io.opentelemetry.sdk'
+    relocate 'io.opentelemetry.exporter', 'io.ballerina.observe.trace.jaeger.shaded.io.opentelemetry.exporter'
+    relocate 'io.opentelemetry.semconv', 'io.ballerina.observe.trace.jaeger.shaded.io.opentelemetry.semconv'
+    relocate 'io.opentelemetry.extension', 'io.ballerina.observe.trace.jaeger.shaded.io.opentelemetry.extension'
+    relocate 'io.opentelemetry.common', 'io.ballerina.observe.trace.jaeger.shaded.io.opentelemetry.common'
+    relocate 'io.opentelemetry.proto', 'io.ballerina.observe.trace.jaeger.shaded.io.opentelemetry.proto'
+    relocate 'io.grpc', 'io.ballerina.observe.trace.jaeger.shaded.io.grpc'
+    relocate 'io.netty', 'io.ballerina.observe.trace.jaeger.shaded.io.netty'
+    relocate 'com.google.protobuf', 'io.ballerina.observe.trace.jaeger.shaded.com.google.protobuf'
+    relocate 'com.google.common', 'io.ballerina.observe.trace.jaeger.shaded.com.google.common'
+    relocate 'com.google.gson', 'io.ballerina.observe.trace.jaeger.shaded.com.google.gson'
+    relocate 'io.perfmark', 'io.ballerina.observe.trace.jaeger.shaded.io.perfmark'
+
+    exclude 'module-info.class'
+    mergeServiceFiles()
+
+    manifest {
+        attributes('Implementation-Title': project.name, 'Implementation-Version': project.version)
+    }
+}
+
 publishing {
     publications {
         mavenJava(MavenPublication) {
             groupId project.group
             artifactId "jaeger-extension-native"
             version = project.version
-            artifact jar
+            artifact shadowJar
         }
     }
 
