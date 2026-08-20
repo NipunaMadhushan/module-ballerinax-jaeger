@@ -67,12 +67,6 @@ artifactId = "opentelemetry-exporter-otlp-common"
 version = "@opentelemetryExporter.version@"
 
 [[platform.java21.dependency]]
-path = "./lib/opentelemetry-extension-trace-propagators-@opentelemetry.version@.jar"
-groupId = "io.opentelemetry"
-artifactId = "opentelemetry-extension-trace-propagators"
-version = "@opentelemetry.version@"
-
-[[platform.java21.dependency]]
 path = "./lib/guava-@guava.version@.jar"
 groupId = "com.google.guava"
 artifactId = "guava"
